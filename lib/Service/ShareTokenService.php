@@ -39,6 +39,7 @@ use OCA\Circles\Model\Member;
 use OCA\Circles\Model\ShareToken;
 use OCA\Circles\Model\ShareWrapper;
 use OCP\IURLGenerator;
+use OCP\Security\IHasher;
 use OCP\Share\IShare;
 
 /**
@@ -52,6 +53,9 @@ class ShareTokenService {
 
 	/** @var IURLGenerator */
 	private $urlGenerator;
+
+	/** @var IHasher */
+	private $hasher;
 
 	/** @var ShareTokenRequest */
 	private $shareTokenRequest;
@@ -67,17 +71,20 @@ class ShareTokenService {
 	 * ShareTokenService constructor.
 	 *
 	 * @param IURLGenerator $urlGenerator
+	 * @param IHasher $hasher
 	 * @param ShareTokenRequest $shareTokenRequest
 	 * @param InterfaceService $interfaceService
 	 * @param ConfigService $configService
 	 */
 	public function __construct(
 		IURLGenerator $urlGenerator,
+		IHasher $hasher,
 		ShareTokenRequest $shareTokenRequest,
 		InterfaceService $interfaceService,
 		ConfigService $configService
 	) {
 		$this->urlGenerator = $urlGenerator;
+		$this->hasher = $hasher;
 		$this->shareTokenRequest = $shareTokenRequest;
 		$this->interfaceService = $interfaceService;
 		$this->configService = $configService;
@@ -87,7 +94,7 @@ class ShareTokenService {
 	/**
 	 * @param ShareWrapper $share
 	 * @param Member $member
-	 * @param string $password
+	 * @param string $hashedPassword
 	 *
 	 * @return ShareToken
 	 * @throws ShareTokenAlreadyExistException
@@ -96,7 +103,7 @@ class ShareTokenService {
 	public function generateShareToken(
 		ShareWrapper $share,
 		Member $member,
-		string $password = ''
+		string $hashedPassword = ''
 	): ShareToken {
 		if ($member->getUserType() !== Member::TYPE_MAIL
 			&& $member->getUserType() !== Member::TYPE_CONTACT) {
@@ -104,14 +111,13 @@ class ShareTokenService {
 		}
 
 		$token = $this->token(19);
-
 		$shareToken = new ShareToken();
 		$shareToken->setShareId((int)$share->getId())
 				   ->setCircleId($share->getSharedWith())
 				   ->setSingleId($member->getSingleId())
 				   ->setMemberId($member->getId())
 				   ->setToken($token)
-				   ->setPassword($password)
+				   ->setPassword($hashedPassword)
 				   ->setAccepted(IShare::STATUS_ACCEPTED);
 
 		try {

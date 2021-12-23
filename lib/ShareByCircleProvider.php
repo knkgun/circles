@@ -64,6 +64,7 @@ use OCA\Circles\Model\Helpers\MemberHelper;
 use OCA\Circles\Model\Probes\CircleProbe;
 use OCA\Circles\Model\ShareWrapper;
 use OCA\Circles\Service\CircleService;
+use OCA\Circles\Service\ConfigService;
 use OCA\Circles\Service\EventService;
 use OCA\Circles\Service\FederatedEventService;
 use OCA\Circles\Service\FederatedUserService;
@@ -131,6 +132,8 @@ class ShareByCircleProvider implements IShareProvider {
 	private $eventService;
 
 
+	private $configService;
+
 	/**
 	 * ShareByCircleProvider constructor.
 	 *
@@ -143,8 +146,13 @@ class ShareByCircleProvider implements IShareProvider {
 	 * @param IURLGenerator $urlGenerator
 	 */
 	public function __construct(
-		IDBConnection $connection, ISecureRandom $secureRandom, IUserManager $userManager,
-		IRootFolder $rootFolder, IL10N $l10n, ILogger $logger, IURLGenerator $urlGenerator
+		IDBConnection $connection,
+		ISecureRandom $secureRandom,
+		IUserManager $userManager,
+		IRootFolder $rootFolder,
+		IL10N $l10n,
+		ILogger $logger,
+		IURLGenerator $urlGenerator
 	) {
 		$this->userManager = $userManager;
 		$this->rootFolder = $rootFolder;
@@ -157,6 +165,7 @@ class ShareByCircleProvider implements IShareProvider {
 		$this->shareWrapperService = OC::$server->get(ShareWrapperService::class);
 		$this->circleService = OC::$server->get(CircleService::class);
 		$this->eventService = OC::$server->get(EventService::class);
+		$this->configService = OC::$server->get(ConfigService::class);
 	}
 
 
@@ -232,8 +241,8 @@ class ShareByCircleProvider implements IShareProvider {
 		}
 
 		$event = new FederatedEvent(FileShare::class);
-		$event->setCircle($circle)
-			  ->getParams()->sObj('wrappedShare', $wrappedShare);
+		$event->setCircle($circle);
+		$event->getParams()->sObj('wrappedShare', $wrappedShare);
 
 		$this->federatedEventService->newEvent($event);
 		$this->eventService->localShareCreated($wrappedShare);
